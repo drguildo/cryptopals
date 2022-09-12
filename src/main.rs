@@ -69,6 +69,17 @@ fn bytes_to_base64(bytes: &[u8]) -> String {
     s
 }
 
+#[cfg(test)]
+mod test {
+    #[test]
+    fn hex_to_base64() {
+        let hex = "49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d";
+        let base64 = "SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29t";
+        let bytes = crate::hex_to_bytes(&hex);
+        assert_eq!(crate::bytes_to_base64(&bytes), base64);
+    }
+}
+
 fn main() {
     let s = std::env::args()
         .nth(1)
