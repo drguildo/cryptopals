@@ -77,6 +77,10 @@ pub fn bytes_to_base64(bytes: &[u8]) -> String {
     s
 }
 
+pub fn xor_buffers(a: &[u8], b: &[u8]) -> Vec<u8> {
+    a.iter().zip(b.iter()).map(|p| p.0 ^ p.1).collect()
+}
+
 #[cfg(test)]
 mod test {
     #[test]
