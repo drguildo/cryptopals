@@ -90,4 +90,12 @@ mod test {
         let bytes = crate::set1::hex_to_bytes(&hex);
         assert_eq!(crate::set1::bytes_to_base64(&bytes), base64);
     }
+
+    #[test]
+    fn bytes_to_hex() {
+        let bytes = [
+            116, 104, 101, 32, 107, 105, 100, 32, 100, 111, 110, 39, 116, 32, 112, 108, 97, 121,
+        ];
+        assert_eq!(crate::set1::bytes_to_hex(&bytes), "746865206b696420646f6e277420706c6179");
+    }
 }
