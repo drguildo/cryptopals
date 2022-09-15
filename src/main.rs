@@ -1,8 +1,12 @@
-use cryptopals::set1::{bytes_to_hex, hex_to_bytes, xor_buffers};
+use cryptopals::set1::single_byte_xor_cypher;
 
 fn main() {
-    let bytes_a = hex_to_bytes("1c0111001f010100061a024b53535009181c");
-    let bytes_b = hex_to_bytes("686974207468652062756c6c277320657965");
-    let xored_bytes = xor_buffers(&bytes_a, &bytes_b);
-    println!("{}", bytes_to_hex(&xored_bytes));
+    println!("== Set 1, Challenge 3 ==");
+    let hex = "1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736";
+    if let Some(key) = single_byte_xor_cypher(&hex) {
+        let bytes = cryptopals::set1::hex_to_bytes(&hex);
+        let xored = bytes.iter().map(|b| b ^ key).collect::<Vec<u8>>();
+        let plaintext = std::str::from_utf8(&xored).expect("Decrypted text is not valid UTF-8");
+        println!("key: {:#X}, text: {}", key, plaintext);
+    }
 }

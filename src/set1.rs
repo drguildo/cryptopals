@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 pub fn hex_to_bytes(hex: &str) -> Vec<u8> {
     let mut bytes = Vec::new();
     let mut i = 0;
@@ -81,6 +83,75 @@ pub fn xor_buffers(a: &[u8], b: &[u8]) -> Vec<u8> {
     a.iter().zip(b.iter()).map(|p| p.0 ^ p.1).collect()
 }
 
+pub fn english_rating(frequencies: &HashMap<char, f32>, s: &str) -> f32 {
+    if s.chars().any(|c| c.is_control()) {
+        return 0.0;
+    }
+
+    let mut counts: HashMap<char, f32> = HashMap::new();
+    s.chars()
+        .map(|c| c.to_ascii_uppercase())
+        .for_each(|item| *counts.entry(item).or_default() += 1.0);
+
+    let mut coefficient: f32 = 0.0;
+    for count in counts {
+        if let Some(freq) = frequencies.get(&count.0) {
+            coefficient += f32::sqrt(freq * count.1 / (s.len() as f32));
+        }
+    }
+
+    coefficient
+}
+
+pub fn single_byte_xor_cypher(hex: &str) -> Option<u8> {
+    let bytes = hex_to_bytes(&hex);
+    let mut candidates: Vec<(f32, u8)> = Vec::new();
+
+    let frequencies = HashMap::from([
+        ('E', 12.02),
+        ('T', 9.10),
+        ('A', 8.12),
+        ('O', 7.68),
+        ('I', 7.31),
+        ('N', 6.95),
+        ('S', 6.28),
+        ('R', 6.02),
+        ('H', 5.92),
+        ('D', 4.32),
+        ('L', 3.98),
+        ('U', 2.88),
+        ('C', 2.71),
+        ('M', 2.61),
+        ('F', 2.30),
+        ('Y', 2.11),
+        ('W', 2.09),
+        ('G', 2.03),
+        ('P', 1.82),
+        ('B', 1.49),
+        ('V', 1.11),
+        ('K', 0.69),
+        ('X', 0.17),
+        ('Q', 0.11),
+        ('J', 0.10),
+        ('Z', 0.07),
+        (' ', 0.19),
+    ]);
+
+    for key in 0x00..0xFF_u8 {
+        if !key.is_ascii_alphabetic() {
+            continue;
+        }
+        let xored = bytes.iter().map(|b| b ^ key).collect::<Vec<u8>>();
+        if let Ok(s) = std::str::from_utf8(&xored) {
+            let rating = english_rating(&frequencies, s);
+            candidates.push((rating, key));
+        }
+    }
+
+    candidates.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
+    candidates.last().map(|candidate| candidate.1)
+}
+
 #[cfg(test)]
 mod test {
     #[test]
@@ -96,6 +167,9 @@ mod test {
         let bytes = [
             116, 104, 101, 32, 107, 105, 100, 32, 100, 111, 110, 39, 116, 32, 112, 108, 97, 121,
         ];
-        assert_eq!(crate::set1::bytes_to_hex(&bytes), "746865206b696420646f6e277420706c6179");
+        assert_eq!(
+            crate::set1::bytes_to_hex(&bytes),
+            "746865206b696420646f6e277420706c6179"
+        );
     }
 }
