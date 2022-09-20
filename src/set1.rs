@@ -103,7 +103,7 @@ pub fn english_rating(frequencies: &HashMap<char, f32>, s: &str) -> f32 {
     coefficient
 }
 
-pub fn single_byte_xor_cypher(hex: &str) -> Option<u8> {
+pub fn single_byte_xor_cypher(hex: &str) -> Option<(f32, u8)> {
     let bytes = hex_to_bytes(&hex);
     let mut candidates: Vec<(f32, u8)> = Vec::new();
 
@@ -149,7 +149,7 @@ pub fn single_byte_xor_cypher(hex: &str) -> Option<u8> {
     }
 
     candidates.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
-    candidates.last().map(|candidate| candidate.1)
+    candidates.last().map(|c| c.to_owned())
 }
 
 #[cfg(test)]
