@@ -84,19 +84,17 @@ pub fn xor_buffers(a: &[u8], b: &[u8]) -> Vec<u8> {
 }
 
 pub fn english_rating(frequencies: &HashMap<char, f32>, s: &str) -> f32 {
-    if s.chars().any(|c| c.is_control()) {
-        return 0.0;
-    }
-
+    let trimmed = s.trim();
+    
     let mut counts: HashMap<char, f32> = HashMap::new();
-    s.chars()
+    trimmed.chars()
         .map(|c| c.to_ascii_uppercase())
         .for_each(|item| *counts.entry(item).or_default() += 1.0);
 
     let mut coefficient: f32 = 0.0;
     for count in counts {
         if let Some(freq) = frequencies.get(&count.0) {
-            coefficient += f32::sqrt(freq * count.1 / (s.len() as f32));
+            coefficient += f32::sqrt(freq * count.1 / (trimmed.len() as f32));
         }
     }
 
