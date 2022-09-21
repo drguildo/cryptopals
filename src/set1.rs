@@ -85,9 +85,10 @@ pub fn xor_buffers(a: &[u8], b: &[u8]) -> Vec<u8> {
 
 pub fn english_rating(frequencies: &HashMap<char, f32>, s: &str) -> f32 {
     let trimmed = s.trim();
-    
+
     let mut counts: HashMap<char, f32> = HashMap::new();
-    trimmed.chars()
+    trimmed
+        .chars()
         .map(|c| c.to_ascii_uppercase())
         .for_each(|item| *counts.entry(item).or_default() += 1.0);
 
@@ -136,9 +137,10 @@ pub fn single_byte_xor_cypher(hex: &str) -> Option<(f32, u8)> {
     ]);
 
     for key in 0x00..0xFF_u8 {
-        if !key.is_ascii_alphabetic() {
+        if !key.is_ascii() {
             continue;
         }
+        // TODO: Separate out the xoring function
         let xored = bytes.iter().map(|b| b ^ key).collect::<Vec<u8>>();
         if let Ok(s) = std::str::from_utf8(&xored) {
             let rating = english_rating(&frequencies, s);
@@ -148,6 +150,38 @@ pub fn single_byte_xor_cypher(hex: &str) -> Option<(f32, u8)> {
 
     candidates.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
     candidates.last().map(|c| c.to_owned())
+}
+
+pub fn find_xored_string(strings: &Vec<&str>) -> Option<String> {
+    let mut best_candidate_key: Option<(f32, u8)> = None;
+    let mut best_candidate_text: Option<&str> = None;
+
+    for s in strings {
+        if let Some(candidate) = single_byte_xor_cypher(*s) {
+            if let Some(best) = best_candidate_key {
+                if candidate.0 > best.0 {
+                    best_candidate_key = Some(candidate);
+                    best_candidate_text = Some(*s);
+                }
+            } else {
+                best_candidate_key = Some(candidate);
+                best_candidate_text = Some(*s);
+            }
+        }
+    }
+
+    if let Some(s) = best_candidate_text {
+        if let Some(candidate) = best_candidate_key {
+            let bytes = hex_to_bytes(s);
+            let xored = bytes.iter().map(|b| b ^ candidate.1).collect::<Vec<u8>>();
+            let plaintext = std::str::from_utf8(&xored).expect("Decrypted text is not valid UTF-8");
+            Some(plaintext.to_owned())
+        } else {
+            None
+        }
+    } else {
+        None
+    }
 }
 
 #[cfg(test)]

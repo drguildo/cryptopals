@@ -27,4 +27,11 @@ fn main() {
             candidate_key.1, candidate_key.0, plaintext
         );
     }
+
+    println!("== Set 1, Challenge 4 ==");
+    let file_contents =
+        std::fs::read_to_string("data/4.txt").expect("Failed to read xored strings");
+    let xored_strings = file_contents.split_whitespace().collect::<Vec<&str>>();
+    let best_candidate = cryptopals::set1::find_xored_string(&xored_strings);
+    print!("{}", best_candidate.unwrap());
 }
