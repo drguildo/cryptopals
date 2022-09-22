@@ -1,5 +1,13 @@
 use std::collections::HashMap;
 
+#[derive(Clone)]
+pub struct Candidate {
+    pub rating: f32,
+    pub key: u8,
+    pub encrypted: String,
+    pub plaintext: String,
+}
+
 pub fn hex_to_bytes(hex: &str) -> Vec<u8> {
     let mut bytes = Vec::new();
     let mut i = 0;
@@ -107,9 +115,9 @@ pub fn english_rating(frequencies: &HashMap<char, f32>, s: &str) -> f32 {
     coefficient
 }
 
-pub fn single_byte_xor_cypher(hex: &str) -> Option<(f32, u8)> {
+pub fn single_byte_xor_cypher(hex: &str) -> Option<Candidate> {
     let bytes = hex_to_bytes(&hex);
-    let mut candidates: Vec<(f32, u8)> = Vec::new();
+    let mut candidates: Vec<Candidate> = Vec::new();
 
     let frequencies = HashMap::from([
         ('E', 12.02),
@@ -149,44 +157,30 @@ pub fn single_byte_xor_cypher(hex: &str) -> Option<(f32, u8)> {
         let xored = xor_vec(&bytes, key);
         if let Ok(s) = std::str::from_utf8(&xored) {
             let rating = english_rating(&frequencies, s);
-            candidates.push((rating, key));
+            candidates.push(Candidate {
+                rating,
+                key,
+                encrypted: hex.to_string(),
+                plaintext: s.to_string(),
+            });
         }
     }
 
-    candidates.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap());
-    candidates.last().map(|c| c.to_owned())
+    candidates.sort_by(|a, b| a.rating.partial_cmp(&b.rating).unwrap());
+    candidates.last().map(|c| c.clone())
 }
 
-pub fn find_xored_string(strings: &Vec<&str>) -> Option<String> {
-    let mut best_candidate_key: Option<(f32, u8)> = None;
-    let mut best_candidate_text: Option<&str> = None;
+pub fn find_xored_string(strings: &Vec<&str>) -> Option<Candidate> {
+    let mut candidates: Vec<Candidate> = Vec::new();
 
     for s in strings {
         if let Some(candidate) = single_byte_xor_cypher(*s) {
-            if let Some(best) = best_candidate_key {
-                if candidate.0 > best.0 {
-                    best_candidate_key = Some(candidate);
-                    best_candidate_text = Some(*s);
-                }
-            } else {
-                best_candidate_key = Some(candidate);
-                best_candidate_text = Some(*s);
-            }
+            candidates.push(candidate);
         }
     }
 
-    if let Some(s) = best_candidate_text {
-        if let Some(candidate) = best_candidate_key {
-            let bytes = hex_to_bytes(s);
-            let xored = xor_vec(&bytes, candidate.1);
-            let plaintext = std::str::from_utf8(&xored).expect("Decrypted text is not valid UTF-8");
-            Some(plaintext.to_owned())
-        } else {
-            None
-        }
-    } else {
-        None
-    }
+    candidates.sort_by(|a, b| a.rating.partial_cmp(&b.rating).unwrap());
+    candidates.last().map(|c| c.clone())
 }
 
 #[cfg(test)]

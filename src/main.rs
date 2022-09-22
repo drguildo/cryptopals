@@ -15,20 +15,22 @@ fn main() {
 
     println!("== Set 1, Challenge 3 ==");
     let hex = "1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736";
-    if let Some(candidate_key) = cryptopals::set1::single_byte_xor_cypher(&hex) {
-        let bytes = cryptopals::set1::hex_to_bytes(&hex);
-        let xored = cryptopals::set1::xor_vec(&bytes, candidate_key.1);
-        let plaintext = std::str::from_utf8(&xored).expect("Decrypted text is not valid UTF-8");
+    if let Some(best_candidate) = cryptopals::set1::single_byte_xor_cypher(&hex) {
         println!(
             "key: {:#X}, rating: {}, text: {}",
-            candidate_key.1, candidate_key.0, plaintext
+            best_candidate.key, best_candidate.rating, best_candidate.plaintext
         );
+    } else {
+        println!("Failed to find candidate");
     }
 
     println!("== Set 1, Challenge 4 ==");
     let file_contents =
         std::fs::read_to_string("data/4.txt").expect("Failed to read xored strings");
     let xored_strings = file_contents.split_whitespace().collect::<Vec<&str>>();
-    let best_candidate = cryptopals::set1::find_xored_string(&xored_strings);
-    print!("{}", best_candidate.unwrap());
+    if let Some(best_candidate) = cryptopals::set1::find_xored_string(&xored_strings) {
+        print!("{}", best_candidate.plaintext);
+    } else {
+        println!("Failed to find candidate");
+    }
 }
