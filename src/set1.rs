@@ -83,6 +83,11 @@ pub fn xor_buffers(a: &[u8], b: &[u8]) -> Vec<u8> {
     a.iter().zip(b.iter()).map(|p| p.0 ^ p.1).collect()
 }
 
+// XOR each element of the specified Vec with the specified key.
+pub fn xor_vec(v: &Vec<u8>, key: u8) -> Vec<u8> {
+    v.iter().map(|b| b ^ key).collect::<Vec<u8>>()
+}
+
 pub fn english_rating(frequencies: &HashMap<char, f32>, s: &str) -> f32 {
     let trimmed = s.trim();
 
@@ -141,7 +146,7 @@ pub fn single_byte_xor_cypher(hex: &str) -> Option<(f32, u8)> {
             continue;
         }
         // TODO: Separate out the xoring function
-        let xored = bytes.iter().map(|b| b ^ key).collect::<Vec<u8>>();
+        let xored = xor_vec(&bytes, key);
         if let Ok(s) = std::str::from_utf8(&xored) {
             let rating = english_rating(&frequencies, s);
             candidates.push((rating, key));
@@ -173,7 +178,7 @@ pub fn find_xored_string(strings: &Vec<&str>) -> Option<String> {
     if let Some(s) = best_candidate_text {
         if let Some(candidate) = best_candidate_key {
             let bytes = hex_to_bytes(s);
-            let xored = bytes.iter().map(|b| b ^ candidate.1).collect::<Vec<u8>>();
+            let xored = xor_vec(&bytes, candidate.1);
             let plaintext = std::str::from_utf8(&xored).expect("Decrypted text is not valid UTF-8");
             Some(plaintext.to_owned())
         } else {

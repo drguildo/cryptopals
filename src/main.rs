@@ -17,10 +17,7 @@ fn main() {
     let hex = "1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736";
     if let Some(candidate_key) = cryptopals::set1::single_byte_xor_cypher(&hex) {
         let bytes = cryptopals::set1::hex_to_bytes(&hex);
-        let xored = bytes
-            .iter()
-            .map(|b| b ^ candidate_key.1)
-            .collect::<Vec<u8>>();
+        let xored = cryptopals::set1::xor_vec(&bytes, candidate_key.1);
         let plaintext = std::str::from_utf8(&xored).expect("Decrypted text is not valid UTF-8");
         println!(
             "key: {:#X}, rating: {}, text: {}",
