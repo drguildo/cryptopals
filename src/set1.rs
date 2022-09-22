@@ -84,7 +84,7 @@ pub fn xor_buffers(a: &[u8], b: &[u8]) -> Vec<u8> {
 }
 
 // XOR each element of the specified Vec with the specified key.
-pub fn xor_vec(v: &Vec<u8>, key: u8) -> Vec<u8> {
+pub fn xor_vec(v: &[u8], key: u8) -> Vec<u8> {
     v.iter().map(|b| b ^ key).collect::<Vec<u8>>()
 }
 
