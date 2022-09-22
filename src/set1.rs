@@ -211,8 +211,8 @@ mod test {
     }
 
     #[test]
-    fn xor_vec_() {
-        let bytes = [0, 1, 2, 3, 4];
-        assert_eq!(crate::set1::xor_vec(&bytes, 0), bytes);
+    fn xor_vec_ff() {
+        let bytes = [0xFF, 0xFF, 0xFF, 0xFF, 0xFF];
+        assert_eq!(crate::set1::xor_vec(&bytes, 0xFF), [0, 0, 0, 0, 0]);
     }
 }
