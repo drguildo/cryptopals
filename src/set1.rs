@@ -209,4 +209,16 @@ mod test {
             "746865206b696420646f6e277420706c6179"
         );
     }
+
+    #[test]
+    fn xor_vec_zero() {
+        let bytes = [0, 1, 2, 3, 4];
+        assert_eq!(crate::set1::xor_vec(&bytes, 0), bytes);
+    }
+
+    #[test]
+    fn xor_vec_() {
+        let bytes = [0, 1, 2, 3, 4];
+        assert_eq!(crate::set1::xor_vec(&bytes, 0), bytes);
+    }
 }
