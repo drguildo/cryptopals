@@ -67,8 +67,8 @@ pub fn bytes_to_base64(bytes: &[u8]) -> String {
         }
 
         u = (c[0] as u64) << 16;
-        u = u | ((c[1] as u64) << 8);
-        u = u | (c[2] as u64);
+        u |= (c[1] as u64) << 8;
+        u |= c[2] as u64;
 
         s.push(alpha[(u >> 18) as usize]);
         s.push(alpha[((u >> 12) & 63) as usize]);
