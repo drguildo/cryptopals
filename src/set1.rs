@@ -167,7 +167,7 @@ pub fn single_byte_xor_cypher(hex: &str) -> Option<Candidate> {
     }
 
     candidates.sort_by(|a, b| a.rating.partial_cmp(&b.rating).unwrap());
-    candidates.last().map(|c| c.clone())
+    candidates.last().cloned()
 }
 
 pub fn find_xored_string(strings: &Vec<&str>) -> Option<Candidate> {
@@ -180,7 +180,7 @@ pub fn find_xored_string(strings: &Vec<&str>) -> Option<Candidate> {
     }
 
     candidates.sort_by(|a, b| a.rating.partial_cmp(&b.rating).unwrap());
-    candidates.last().map(|c| c.clone())
+    candidates.last().cloned()
 }
 
 #[cfg(test)]
