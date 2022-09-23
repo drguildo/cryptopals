@@ -116,7 +116,7 @@ pub fn english_rating(frequencies: &HashMap<char, f32>, s: &str) -> f32 {
 }
 
 pub fn single_byte_xor_cypher(hex: &str) -> Option<Candidate> {
-    let bytes = hex_to_bytes(&hex);
+    let bytes = hex_to_bytes(hex);
     let mut candidates: Vec<Candidate> = Vec::new();
 
     let frequencies = HashMap::from([
