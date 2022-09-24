@@ -119,6 +119,7 @@ pub fn single_byte_xor_cypher(hex: &str) -> Option<Candidate> {
     let bytes = hex_to_bytes(hex);
     let mut candidates: Vec<Candidate> = Vec::new();
 
+    #[allow(clippy::approx_constant)]
     let frequencies = HashMap::from([
         ('E', 12.02),
         ('T', 9.10),
