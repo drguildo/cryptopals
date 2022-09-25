@@ -115,7 +115,7 @@ pub fn english_rating(frequencies: &HashMap<char, f32>, s: &str) -> f32 {
     coefficient
 }
 
-pub fn single_byte_xor_cypher(hex: &str) -> Option<Candidate> {
+pub fn detect_single_byte_xor_key(hex: &str) -> Option<Candidate> {
     let bytes = hex_to_bytes(hex);
     let mut candidates: Vec<Candidate> = Vec::new();
 
@@ -175,7 +175,7 @@ pub fn find_xored_string(strings: &Vec<&str>) -> Option<Candidate> {
     let mut candidates: Vec<Candidate> = Vec::new();
 
     for s in strings {
-        if let Some(candidate) = single_byte_xor_cypher(*s) {
+        if let Some(candidate) = detect_single_byte_xor_key(*s) {
             candidates.push(candidate);
         }
     }
@@ -243,7 +243,7 @@ mod test {
     #[test]
     fn challenge3() {
         let hex = "1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736";
-        let best_candidate = crate::set1::single_byte_xor_cypher(&hex).unwrap();
+        let best_candidate = crate::set1::detect_single_byte_xor_key(&hex).unwrap();
         assert_eq!(0x58, best_candidate.key);
         assert_eq!(
             "Cooking MC's like a pound of bacon",
