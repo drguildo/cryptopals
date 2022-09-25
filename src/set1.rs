@@ -193,6 +193,14 @@ pub fn find_xored_string(strings: &Vec<&str>) -> Option<Candidate> {
     candidates.last().cloned()
 }
 
+// Find the Hamming distance between the specified strings.
+pub fn hamming_distance(s1: &str, s2: &str) -> u32 {
+    s1.bytes()
+        .zip(s2.bytes())
+        .map(|e| (e.0 ^ e.1).count_ones())
+        .fold(0, |acc, x| acc + x)
+}
+
 #[cfg(test)]
 mod test {
     #[test]
@@ -277,5 +285,13 @@ mod test {
         let xored = crate::set1::repeating_key_xor_vec(plaintext.as_bytes(), "ICE".as_bytes());
         let hex = crate::set1::bytes_to_hex(&xored);
         assert_eq!("0b3637272a2b2e63622c2e69692a23693a2a3c6324202d623d63343c2a26226324272765272a282b2f20430a652e2c652a3124333a653e2b2027630c692b20283165286326302e27282f", hex);
+    }
+
+    #[test]
+    fn hamming_distance_37() {
+        assert_eq!(
+            crate::set1::hamming_distance("this is a test", "wokka wokka!!!"),
+            37
+        );
     }
 }
