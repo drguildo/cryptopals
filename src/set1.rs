@@ -91,7 +91,7 @@ pub fn xor_buffers(a: &[u8], b: &[u8]) -> Vec<u8> {
     a.iter().zip(b.iter()).map(|p| p.0 ^ p.1).collect()
 }
 
-// XOR each element of the specified Vec with the specified key.
+// XOR each element of the specified slice with the specified key.
 pub fn xor_vec(v: &[u8], key: u8) -> Vec<u8> {
     v.iter().map(|b| b ^ key).collect::<Vec<u8>>()
 }
