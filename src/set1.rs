@@ -263,7 +263,7 @@ mod test {
     #[test]
     fn challenge4() {
         let file_contents =
-            std::fs::read_to_string("data/4.txt").expect("Failed to read xored strings");
+            std::fs::read_to_string("data/4.txt").expect("Failed to read XORed strings");
         let xored_strings = file_contents.split_whitespace().collect::<Vec<&str>>();
         let best_candidate = crate::set1::find_xored_string(&xored_strings).unwrap();
         assert_eq!(0x35, best_candidate.key);
