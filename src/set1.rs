@@ -96,6 +96,15 @@ pub fn xor_vec(v: &[u8], key: u8) -> Vec<u8> {
     v.iter().map(|b| b ^ key).collect::<Vec<u8>>()
 }
 
+// Sequentially XOR each element of the specified slice with the corresponding element of the
+// specified key, cycling back to the beginning once exhausted.
+pub fn repeating_key_xor_vec(v: &[u8], key: &[u8]) -> Vec<u8> {
+    v.iter()
+        .zip(key.iter().cycle())
+        .map(|e| e.0 ^ e.1)
+        .collect::<Vec<u8>>()
+}
+
 pub fn english_rating(frequencies: &HashMap<char, f32>, s: &str) -> f32 {
     let trimmed = s.trim();
 
@@ -259,5 +268,14 @@ mod test {
         let best_candidate = crate::set1::find_xored_string(&xored_strings).unwrap();
         assert_eq!(0x35, best_candidate.key);
         assert_eq!("Now that the party is jumping\n", best_candidate.plaintext);
+    }
+
+    #[test]
+    fn challenge5() {
+        let plaintext =
+            "Burning 'em, if you ain't quick and nimble\nI go crazy when I hear a cymbal";
+        let xored = crate::set1::repeating_key_xor_vec(plaintext.as_bytes(), "ICE".as_bytes());
+        let hex = crate::set1::bytes_to_hex(&xored);
+        assert_eq!("0b3637272a2b2e63622c2e69692a23693a2a3c6324202d623d63343c2a26226324272765272a282b2f20430a652e2c652a3124333a653e2b2027630c692b20283165286326302e27282f", hex);
     }
 }
