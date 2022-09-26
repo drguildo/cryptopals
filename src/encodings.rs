@@ -152,4 +152,18 @@ mod test {
             "746865206b696420646f6e277420706c6179"
         );
     }
+
+    #[test]
+    fn decode_short_base64_string() {
+        let base64 = "bGlnaHQgd29yay4=";
+        let decoded_bytes = crate::encodings::base64_decode(base64).unwrap();
+        let decoded_string = std::str::from_utf8(&decoded_bytes).unwrap();
+        assert_eq!("light work.", decoded_string);
+    }
+
+    #[test]
+    fn decode_empty_base64_string() {
+        let decoded_bytes = crate::encodings::base64_decode("").unwrap();
+        assert_eq!(Vec::<u8>::new(), decoded_bytes);
+    }
 }
