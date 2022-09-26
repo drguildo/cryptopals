@@ -94,7 +94,7 @@ pub fn base64_decode(s: &str) -> Result<Vec<u8>, &'static str> {
         return Err("Invalid Base64 string length");
     }
 
-    let mut acc: u8 = 0;
+    let mut acc: u8;
     let chars = s.chars().collect::<Vec<char>>();
     let mut decoded = Vec::new();
 
