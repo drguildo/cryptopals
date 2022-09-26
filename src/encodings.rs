@@ -22,14 +22,14 @@ pub fn hex_decode(hex: &str) -> Vec<u8> {
     bytes
 }
 
-pub fn base64_encode(bytes: &[u8]) -> String {
-    let alpha = [
-        'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R',
-        'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
-        'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1',
-        '2', '3', '4', '5', '6', '7', '8', '9', '+', '/',
-    ];
+const ALPHABET: [char; 64] = [
+    'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S',
+    'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l',
+    'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1', '2', '3', '4',
+    '5', '6', '7', '8', '9', '+', '/',
+];
 
+pub fn base64_encode(bytes: &[u8]) -> String {
     let mut s = String::new();
     let mut c = [0; 3];
     let mut i: usize = 0;
@@ -60,21 +60,77 @@ pub fn base64_encode(bytes: &[u8]) -> String {
         u |= (c[1] as u64) << 8;
         u |= c[2] as u64;
 
-        s.push(alpha[(u >> 18) as usize]);
-        s.push(alpha[((u >> 12) & 63) as usize]);
+        s.push(ALPHABET[(u >> 18) as usize]);
+        s.push(ALPHABET[((u >> 12) & 63) as usize]);
         s.push(if read < 2 {
             '='
         } else {
-            alpha[(u >> 6 & 63) as usize]
+            ALPHABET[(u >> 6 & 63) as usize]
         });
         s.push(if read < 3 {
             '='
         } else {
-            alpha[(u & 63) as usize]
+            ALPHABET[(u & 63) as usize]
         });
     }
 
     s
+}
+
+fn find_index(c: char) -> Result<u8, &'static str> {
+    let ascii = c as u8;
+    match c {
+        'A'..='Z' => Ok(ascii - ('A' as u8)),
+        'a'..='z' => Ok(ascii - ('a' as u8) + 26),
+        '0'..='9' => Ok(ascii - ('0' as u8) + 52),
+        '+' => Ok(62),
+        '/' => Ok(63),
+        _ => Err("Invalid Base64 character"),
+    }
+}
+
+pub fn base64_decode(s: &str) -> Result<Vec<u8>, &'static str> {
+    if (s.len() % 4) != 0 {
+        return Err("Invalid Base64 string length");
+    }
+
+    let mut acc: u8 = 0;
+    let chars = s.chars().collect::<Vec<char>>();
+    let mut decoded = Vec::new();
+
+    let mut i = 0;
+    while i < chars.len() {
+        let b1 = chars[i];
+        let b2 = chars[i + 1];
+        let b3 = chars[i + 2];
+        let b4 = chars[i + 3];
+        i += 4;
+
+        let i1 = find_index(b1)?;
+        let i2 = find_index(b2)?;
+
+        acc = i1 << 2;
+        acc |= i2 >> 4;
+        decoded.push(acc);
+
+        if b3 != '=' {
+            let i3 = find_index(b3)?;
+
+            acc = (i2 & 0xF) << 4;
+            acc += i3 >> 2; // Should this be an &=?
+            decoded.push(acc);
+
+            if b4 != '=' {
+                let i4 = find_index(b4)?;
+
+                acc = (i3 & 0x3) << 6;
+                acc |= i4;
+                decoded.push(acc);
+            }
+        }
+    }
+
+    Ok(decoded)
 }
 
 mod test {
