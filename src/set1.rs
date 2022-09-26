@@ -8,85 +8,6 @@ pub struct Candidate {
     pub plaintext: String,
 }
 
-pub fn hex_to_bytes(hex: &str) -> Vec<u8> {
-    let mut bytes = Vec::new();
-    let mut i = 0;
-    while i < hex.len() {
-        let n = if i <= hex.len() - 2 {
-            &hex[i..i + 2]
-        } else {
-            &hex[i..i + 1]
-        };
-        let b = u8::from_str_radix(n, 16).expect("Invalid hex string");
-        bytes.push(b);
-        i += 2;
-    }
-    bytes
-}
-
-pub fn bytes_to_hex(bytes: &[u8]) -> String {
-    bytes
-        .iter()
-        .map(|b| format!("{:02x}", b))
-        .collect::<Vec<String>>()
-        .join("")
-}
-
-pub fn bytes_to_base64(bytes: &[u8]) -> String {
-    let alpha = [
-        'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R',
-        'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
-        'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '0', '1',
-        '2', '3', '4', '5', '6', '7', '8', '9', '+', '/',
-    ];
-
-    let mut s = String::new();
-    let mut c = [0; 3];
-    let mut i: usize = 0;
-    let mut u: u64;
-    let mut read;
-
-    while i < bytes.len() {
-        c[1] = 0;
-        c[2] = 0;
-
-        c[0] = bytes[i];
-        i += 1;
-        read = 1;
-
-        if i < bytes.len() {
-            c[1] = bytes[i];
-            i += 1;
-            read = 2;
-
-            if i < bytes.len() {
-                c[2] = bytes[i];
-                i += 1;
-                read = 3;
-            }
-        }
-
-        u = (c[0] as u64) << 16;
-        u |= (c[1] as u64) << 8;
-        u |= c[2] as u64;
-
-        s.push(alpha[(u >> 18) as usize]);
-        s.push(alpha[((u >> 12) & 63) as usize]);
-        s.push(if read < 2 {
-            '='
-        } else {
-            alpha[(u >> 6 & 63) as usize]
-        });
-        s.push(if read < 3 {
-            '='
-        } else {
-            alpha[(u & 63) as usize]
-        });
-    }
-
-    s
-}
-
 pub fn xor_buffers(a: &[u8], b: &[u8]) -> Vec<u8> {
     a.iter().zip(b.iter()).map(|p| p.0 ^ p.1).collect()
 }
@@ -125,7 +46,7 @@ pub fn english_rating(frequencies: &HashMap<char, f32>, s: &str) -> f32 {
 }
 
 pub fn detect_single_byte_xor_key(hex: &str) -> Option<Candidate> {
-    let bytes = hex_to_bytes(hex);
+    let bytes = crate::encodings::hex_decode(hex);
     let mut candidates: Vec<Candidate> = Vec::new();
 
     #[allow(clippy::approx_constant)]
@@ -204,25 +125,6 @@ pub fn hamming_distance(s1: &str, s2: &str) -> u32 {
 #[cfg(test)]
 mod test {
     #[test]
-    fn hex_to_base64() {
-        let hex = "49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d";
-        let base64 = "SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29t";
-        let bytes = crate::set1::hex_to_bytes(&hex);
-        assert_eq!(crate::set1::bytes_to_base64(&bytes), base64);
-    }
-
-    #[test]
-    fn bytes_to_hex() {
-        let bytes = [
-            116, 104, 101, 32, 107, 105, 100, 32, 100, 111, 110, 39, 116, 32, 112, 108, 97, 121,
-        ];
-        assert_eq!(
-            crate::set1::bytes_to_hex(&bytes),
-            "746865206b696420646f6e277420706c6179"
-        );
-    }
-
-    #[test]
     fn xor_vec_zero() {
         let bytes = [0, 1, 2, 3, 4];
         assert_eq!(crate::set1::xor_vec(&bytes, 0), bytes);
@@ -237,8 +139,8 @@ mod test {
     #[test]
     fn challenge1() {
         let hex = "49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d";
-        let bytes = crate::set1::hex_to_bytes(&hex);
-        let base64 = crate::set1::bytes_to_base64(&bytes);
+        let bytes = crate::encodings::hex_decode(&hex);
+        let base64 = crate::encodings::base64_encode(&bytes);
         assert_eq!(
             base64,
             "SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29t"
@@ -249,11 +151,13 @@ mod test {
     fn challenge2() {
         let a = "1c0111001f010100061a024b53535009181c";
         let b = "686974207468652062756c6c277320657965";
-        let xored =
-            crate::set1::xor_buffers(&crate::set1::hex_to_bytes(a), &crate::set1::hex_to_bytes(b));
+        let xored = crate::set1::xor_buffers(
+            &crate::encodings::hex_decode(a),
+            &crate::encodings::hex_decode(b),
+        );
         assert_eq!(
             "746865206b696420646f6e277420706c6179",
-            crate::set1::bytes_to_hex(&xored)
+            crate::encodings::hex_encode(&xored)
         );
     }
 
@@ -283,7 +187,7 @@ mod test {
         let plaintext =
             "Burning 'em, if you ain't quick and nimble\nI go crazy when I hear a cymbal";
         let xored = crate::set1::repeating_key_xor_vec(plaintext.as_bytes(), "ICE".as_bytes());
-        let hex = crate::set1::bytes_to_hex(&xored);
+        let hex = crate::encodings::hex_encode(&xored);
         assert_eq!("0b3637272a2b2e63622c2e69692a23693a2a3c6324202d623d63343c2a26226324272765272a282b2f20430a652e2c652a3124333a653e2b2027630c692b20283165286326302e27282f", hex);
     }
 
