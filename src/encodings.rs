@@ -166,4 +166,12 @@ mod test {
         let decoded_bytes = crate::encodings::base64_decode("").unwrap();
         assert_eq!(Vec::<u8>::new(), decoded_bytes);
     }
+
+    #[test]
+    fn encode_and_decode_matches_original() {
+        let bytes = [1, 2, 3, 4, 5, 6];
+        let encoded = crate::encodings::base64_encode(&bytes);
+        let decoded = crate::encodings::base64_decode(&encoded).unwrap();
+        assert_eq!(bytes, decoded.as_slice());
+    }
 }
