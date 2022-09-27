@@ -135,14 +135,6 @@ pub fn base64_decode(s: &str) -> Result<Vec<u8>, &'static str> {
 
 mod test {
     #[test]
-    fn hex_to_base64() {
-        let hex = "49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d";
-        let base64 = "SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29t";
-        let bytes = crate::encodings::hex_decode(&hex);
-        assert_eq!(crate::encodings::base64_encode(&bytes), base64);
-    }
-
-    #[test]
     fn bytes_to_hex() {
         let bytes = [
             116, 104, 101, 32, 107, 105, 100, 32, 100, 111, 110, 39, 116, 32, 112, 108, 97, 121,
@@ -151,6 +143,13 @@ mod test {
             crate::encodings::hex_encode(&bytes),
             "746865206b696420646f6e277420706c6179"
         );
+    }
+
+    #[test]
+    fn base6_encode_string() {
+        let hex = "49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d";
+        let bytes = crate::encodings::hex_decode(&hex);
+        assert_eq!(crate::encodings::base64_encode(&bytes), "SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29t");
     }
 
     #[test]
