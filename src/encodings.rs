@@ -138,7 +138,7 @@ pub fn base64_decode(s: &str) -> Result<Vec<u8>, &'static str> {
 
 mod test {
     #[test]
-    fn bytes_to_hex() {
+    fn hex_encode_byte_array() {
         let bytes = [
             116, 104, 101, 32, 107, 105, 100, 32, 100, 111, 110, 39, 116, 32, 112, 108, 97, 121,
         ];
@@ -149,7 +149,7 @@ mod test {
     }
 
     #[test]
-    fn hex_decode_string() {
+    fn decode_hex_string() {
         let hex = "49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d";
         let decoded_bytes = crate::encodings::hex_decode(hex);
         let decoded_string = std::str::from_utf8(&decoded_bytes).unwrap();
@@ -160,7 +160,7 @@ mod test {
     }
 
     #[test]
-    fn hex_string_with_newline() {
+    fn decode_hex_string_with_newline() {
         let hex = "49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f757320\n6d757368726f6f6d";
         let decoded_bytes = crate::encodings::hex_decode(hex);
         let decoded_string = std::str::from_utf8(&decoded_bytes).unwrap();
