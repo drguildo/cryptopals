@@ -146,6 +146,17 @@ mod test {
     }
 
     #[test]
+    fn hex_decode_string() {
+        let hex = "49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d";
+        let decoded_bytes = crate::encodings::hex_decode(hex);
+        let decoded_string = std::str::from_utf8(&decoded_bytes).unwrap();
+        assert_eq!(
+            decoded_string,
+            "I'm killing your brain like a poisonous mushroom"
+        );
+    }
+
+    #[test]
     fn base6_encode_string() {
         let hex = "49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d";
         let bytes = crate::encodings::hex_decode(&hex);
