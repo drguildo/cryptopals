@@ -171,13 +171,6 @@ mod test {
     }
 
     #[test]
-    fn base6_encode_string() {
-        let hex = "49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d";
-        let bytes = crate::encodings::hex_decode(&hex);
-        assert_eq!(crate::encodings::base64_encode(&bytes), "SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29t");
-    }
-
-    #[test]
     fn decode_short_base64_string() {
         let base64 = "bGlnaHQgd29yay4=";
         let decoded_bytes = crate::encodings::base64_decode(base64).unwrap();
