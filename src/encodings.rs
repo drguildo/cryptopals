@@ -8,16 +8,17 @@ pub fn hex_encode(bytes: &[u8]) -> String {
 
 pub fn hex_decode(hex: &str) -> Vec<u8> {
     let mut bytes = Vec::new();
-    let mut i = 0;
-    while i < hex.len() {
-        let n = if i <= hex.len() - 2 {
-            &hex[i..i + 2]
-        } else {
-            &hex[i..i + 1]
-        };
-        let b = u8::from_str_radix(n, 16).expect("Invalid hex string");
-        bytes.push(b);
-        i += 2;
+    let mut digits = String::new();
+    for (i, c) in hex.chars().enumerate() {
+        if c.is_ascii_control() {
+            continue;
+        }
+        digits.push(c);
+        if (i == hex.len() - 1) || digits.len() == 2 {
+            let b = u8::from_str_radix(&digits, 16).expect("Invalid hex string");
+            bytes.push(b);
+            digits = String::new();
+        }
     }
     bytes
 }
@@ -90,15 +91,17 @@ fn find_index(c: char) -> Result<u8, &'static str> {
 }
 
 pub fn base64_decode(s: &str) -> Result<Vec<u8>, &'static str> {
-    if (s.len() % 4) != 0 {
+    let chars = s
+        .chars()
+        .filter(|c| !c.is_ascii_control())
+        .collect::<Vec<char>>();
+    if (chars.len() % 4) != 0 {
         return Err("Invalid Base64 string length");
     }
 
     let mut acc: u8;
-    let chars = s.chars().collect::<Vec<char>>();
     let mut decoded = Vec::new();
-
-    let mut i = 0;
+        let mut i = 0;
     while i < chars.len() {
         let b1 = chars[i];
         let b2 = chars[i + 1];
@@ -157,6 +160,17 @@ mod test {
     }
 
     #[test]
+    fn hex_string_with_newline() {
+        let hex = "49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f757320\n6d757368726f6f6d";
+        let decoded_bytes = crate::encodings::hex_decode(hex);
+        let decoded_string = std::str::from_utf8(&decoded_bytes).unwrap();
+        assert_eq!(
+            decoded_string,
+            "I'm killing your brain like a poisonous mushroom"
+        );
+    }
+
+    #[test]
     fn base6_encode_string() {
         let hex = "49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d";
         let bytes = crate::encodings::hex_decode(&hex);
@@ -175,6 +189,14 @@ mod test {
     fn decode_empty_base64_string() {
         let decoded_bytes = crate::encodings::base64_decode("").unwrap();
         assert_eq!(Vec::<u8>::new(), decoded_bytes);
+    }
+
+    #[test]
+    fn decode_base64_string_with_newline() {
+        let base64 = "IlVzZSB0aGUgZm9yY2UsIEhh\ncnJ5ISIgLSBHYW5kYWxm";
+        let decoded_bytes = crate::encodings::base64_decode(base64).unwrap();
+        let decoded_string = std::str::from_utf8(&decoded_bytes).unwrap();
+        assert_eq!("\"Use the force, Harry!\" - Gandalf", decoded_string);
     }
 
     #[test]
