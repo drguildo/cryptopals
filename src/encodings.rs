@@ -171,6 +171,12 @@ mod test {
     }
 
     #[test]
+    fn base64_encode_string() {
+        let encoded = crate::encodings::base64_encode("My hovercraft is full of eels.".as_bytes());
+        assert_eq!("TXkgaG92ZXJjcmFmdCBpcyBmdWxsIG9mIGVlbHMu", encoded);
+    }
+
+    #[test]
     fn decode_short_base64_string() {
         let base64 = "bGlnaHQgd29yay4=";
         let decoded_bytes = crate::encodings::base64_decode(base64).unwrap();
