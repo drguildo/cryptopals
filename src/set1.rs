@@ -115,9 +115,10 @@ pub fn find_xored_string(strings: &Vec<&str>) -> Option<Candidate> {
 }
 
 // Find the Hamming distance between the specified strings.
-pub fn hamming_distance(s1: &str, s2: &str) -> u32 {
-    s1.bytes()
-        .zip(s2.bytes())
+pub fn hamming_distance<T: Into<Vec<u8>>>(s1: T, s2: T) -> u32 {
+    s1.into()
+        .iter()
+        .zip(s2.into().iter())
         .map(|e| (e.0 ^ e.1).count_ones())
         .fold(0, |acc, x| acc + x)
 }
