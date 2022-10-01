@@ -115,10 +115,9 @@ pub fn find_xored_string(strings: &Vec<&str>) -> Option<Candidate> {
 }
 
 // Find the Hamming distance between the specified strings.
-pub fn hamming_distance<T: Into<Vec<u8>>>(s1: T, s2: T) -> u32 {
-    s1.into()
-        .iter()
-        .zip(s2.into().iter())
+pub fn hamming_distance(s1: &[u8], s2: &[u8]) -> u32 {
+    s1.iter()
+        .zip(s2.iter())
         .map(|e| (e.0 ^ e.1).count_ones())
         .fold(0, |acc, x| acc + x)
 }
@@ -195,7 +194,7 @@ mod test {
     #[test]
     fn hamming_distance_37() {
         assert_eq!(
-            crate::set1::hamming_distance("this is a test", "wokka wokka!!!"),
+            crate::set1::hamming_distance("this is a test".as_bytes(), "wokka wokka!!!".as_bytes()),
             37
         );
     }
