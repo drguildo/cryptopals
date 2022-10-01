@@ -114,6 +114,85 @@ pub fn find_xored_string(strings: &Vec<&str>) -> Option<Candidate> {
     candidates.last().cloned()
 }
 
+fn find_keysize_simple(encrypted: &[u8]) -> u8 {
+    let mut keysize_distance: Option<(u8, f64)> = None;
+    for keysize in 2..=40 {
+        let a: Vec<u8> = encrypted.iter().take(keysize).copied().collect();
+        let b: Vec<u8> = encrypted
+            .iter()
+            .skip(keysize)
+            .take(keysize)
+            .copied()
+            .collect();
+
+        let normalizd_distance = hamming_distance(&a, &b) as f64 / keysize as f64;
+        println!("keysize: {}, distance: {}", keysize, normalizd_distance);
+        if let Some((_, distance)) = keysize_distance {
+            if normalizd_distance < distance {
+                keysize_distance = Some((keysize as u8, normalizd_distance));
+            }
+        } else {
+            keysize_distance = Some((keysize as u8, normalizd_distance));
+        }
+    }
+    keysize_distance.unwrap().0
+}
+
+fn find_keysize_average(encrypted: &[u8]) -> u8 {
+    let mut keysize_distance: Option<(u8, f64)> = None;
+    for keysize in 2..=40 {
+        let block1: Vec<u8> = encrypted.iter().take(keysize).copied().collect();
+        let block2: Vec<u8> = encrypted
+            .iter()
+            .skip(keysize)
+            .take(keysize)
+            .copied()
+            .collect();
+        let block3: Vec<u8> = encrypted
+            .iter()
+            .skip(keysize * 2)
+            .take(keysize)
+            .copied()
+            .collect();
+        let block4: Vec<u8> = encrypted
+            .iter()
+            .skip(keysize * 3)
+            .take(keysize)
+            .copied()
+            .collect();
+
+        let mut normalizd_distances: Vec<f64> = Vec::new();
+        normalizd_distances.push(hamming_distance(&block1, &block2) as f64 / keysize as f64);
+        normalizd_distances.push(hamming_distance(&block1, &block3) as f64 / keysize as f64);
+        normalizd_distances.push(hamming_distance(&block1, &block4) as f64 / keysize as f64);
+        normalizd_distances.push(hamming_distance(&block2, &block3) as f64 / keysize as f64);
+        normalizd_distances.push(hamming_distance(&block2, &block4) as f64 / keysize as f64);
+        normalizd_distances.push(hamming_distance(&block3, &block4) as f64 / keysize as f64);
+
+        let mut average_distance: f64 = normalizd_distances.iter().sum();
+        average_distance = average_distance / normalizd_distances.len() as f64;
+        println!(
+            "keysize: {}, average distance: {}",
+            keysize, average_distance
+        );
+        if let Some((_, distance)) = keysize_distance {
+            if average_distance < distance {
+                keysize_distance = Some((keysize as u8, average_distance));
+            }
+        } else {
+            keysize_distance = Some((keysize as u8, average_distance));
+        }
+    }
+
+    keysize_distance.unwrap().0
+}
+
+pub fn find_repeating_key_xored_string(encrypted: &[u8]) -> Option<Candidate> {
+    let keysize = find_keysize_simple(encrypted);
+    println!("{}", keysize);
+    None
+}
+
 // Find the Hamming distance between the specified strings.
 pub fn hamming_distance(s1: &[u8], s2: &[u8]) -> u32 {
     s1.iter()
