@@ -122,7 +122,6 @@ fn find_keysize_simple(encrypted: &[u8]) -> u8 {
         let block2 = blocks.next().unwrap();
 
         let normalizd_distance = hamming_distance(&block1, &block2) as f64 / keysize as f64;
-        println!("keysize: {}, distance: {}", keysize, normalizd_distance);
         if let Some((_, distance)) = keysize_distance {
             if normalizd_distance < distance {
                 keysize_distance = Some((keysize as u8, normalizd_distance));
@@ -153,10 +152,6 @@ fn find_keysize_average(encrypted: &[u8]) -> u8 {
 
         let mut average_distance: f64 = normalizd_distances.iter().sum();
         average_distance = average_distance / normalizd_distances.len() as f64;
-        println!(
-            "keysize: {}, average distance: {}",
-            keysize, average_distance
-        );
         if let Some((_, distance)) = keysize_distance {
             if average_distance < distance {
                 keysize_distance = Some((keysize as u8, average_distance));
