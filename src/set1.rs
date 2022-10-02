@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 
+use crate::util::hamming_distance;
+
 #[derive(Clone)]
 pub struct Candidate {
     pub rating: f32,
@@ -164,38 +166,10 @@ fn find_keysize_average(encrypted: &[u8]) -> u8 {
     keysize_distance.unwrap().0
 }
 
-// TODO: Make this more declarative/functional
-fn transpose(bytes: &[u8], block_size: usize) -> Vec<Vec<u8>> {
-    let chunks = bytes.chunks(block_size);
-    let mut transposed: Vec<Vec<u8>> = Vec::new();
-    for chunk in chunks {
-        for i in 0..block_size {
-            if i < chunk.len() {
-                if let Some(block) = transposed.get_mut(i) {
-                    block.push(chunk[i]);
-                } else {
-                    let mut block = Vec::new();
-                    block.push(chunk[i]);
-                    transposed.insert(i, block);
-                }
-            }
-        }
-    }
-    transposed
-}
-
 pub fn find_repeating_key_xored_string(encrypted: &[u8]) -> Option<Candidate> {
     let keysize = find_keysize_simple(encrypted);
     println!("{}", keysize);
     None
-}
-
-// Find the Hamming distance between the specified strings.
-pub fn hamming_distance(s1: &[u8], s2: &[u8]) -> u32 {
-    s1.iter()
-        .zip(s2.iter())
-        .map(|e| (e.0 ^ e.1).count_ones())
-        .fold(0, |acc, x| acc + x)
 }
 
 #[cfg(test)]
@@ -265,39 +239,5 @@ mod test {
         let xored = crate::set1::repeating_key_xor_vec(plaintext.as_bytes(), "ICE".as_bytes());
         let hex = crate::encodings::hex_encode(&xored);
         assert_eq!("0b3637272a2b2e63622c2e69692a23693a2a3c6324202d623d63343c2a26226324272765272a282b2f20430a652e2c652a3124333a653e2b2027630c692b20283165286326302e27282f", hex);
-    }
-
-    #[test]
-    fn hamming_distance_37() {
-        assert_eq!(
-            crate::set1::hamming_distance("this is a test".as_bytes(), "wokka wokka!!!".as_bytes()),
-            37
-        );
-    }
-
-    #[test]
-    fn transpose_empty() {
-        let transposed = crate::set1::transpose(&[], 4);
-        assert!(transposed.is_empty());
-    }
-
-    #[test]
-    fn transpose_equally_sized() {
-        let bytes: Vec<u8> = (0..12).collect();
-        let transposed = crate::set1::transpose(&bytes, 4);
-        assert_eq!([0, 4, 8].to_vec(), transposed[0]);
-        assert_eq!([1, 5, 9].to_vec(), transposed[1]);
-        assert_eq!([2, 6, 10].to_vec(), transposed[2]);
-        assert_eq!([3, 7, 11].to_vec(), transposed[3]);
-    }
-
-    #[test]
-    fn transpose_unequally_sized() {
-        let bytes: Vec<u8> = (0..10).collect();
-        let transposed = crate::set1::transpose(&bytes, 4);
-        assert_eq!([0, 4, 8].to_vec(), transposed[0]);
-        assert_eq!([1, 5, 9].to_vec(), transposed[1]);
-        assert_eq!([2, 6].to_vec(), transposed[2]);
-        assert_eq!([3, 7].to_vec(), transposed[3]);
     }
 }
