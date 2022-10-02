@@ -141,25 +141,11 @@ fn find_keysize_simple(encrypted: &[u8]) -> u8 {
 fn find_keysize_average(encrypted: &[u8]) -> u8 {
     let mut keysize_distance: Option<(u8, f64)> = None;
     for keysize in 2..=40 {
-        let block1: Vec<u8> = encrypted.iter().take(keysize).copied().collect();
-        let block2: Vec<u8> = encrypted
-            .iter()
-            .skip(keysize)
-            .take(keysize)
-            .copied()
-            .collect();
-        let block3: Vec<u8> = encrypted
-            .iter()
-            .skip(keysize * 2)
-            .take(keysize)
-            .copied()
-            .collect();
-        let block4: Vec<u8> = encrypted
-            .iter()
-            .skip(keysize * 3)
-            .take(keysize)
-            .copied()
-            .collect();
+        let mut blocks = encrypted.chunks(keysize);
+        let block1 = blocks.nth(0).unwrap();
+        let block2 = blocks.nth(1).unwrap();
+        let block3 = blocks.nth(2).unwrap();
+        let block4 = blocks.nth(3).unwrap();
 
         let mut normalizd_distances: Vec<f64> = Vec::new();
         normalizd_distances.push(hamming_distance(&block1, &block2) as f64 / keysize as f64);
