@@ -117,15 +117,11 @@ pub fn find_xored_string(strings: &Vec<&str>) -> Option<Candidate> {
 fn find_keysize_simple(encrypted: &[u8]) -> u8 {
     let mut keysize_distance: Option<(u8, f64)> = None;
     for keysize in 2..=40 {
-        let a: Vec<u8> = encrypted.iter().take(keysize).copied().collect();
-        let b: Vec<u8> = encrypted
-            .iter()
-            .skip(keysize)
-            .take(keysize)
-            .copied()
-            .collect();
+        let mut blocks = encrypted.chunks(keysize);
+        let block1 = blocks.next().unwrap();
+        let block2 = blocks.next().unwrap();
 
-        let normalizd_distance = hamming_distance(&a, &b) as f64 / keysize as f64;
+        let normalizd_distance = hamming_distance(&block1, &block2) as f64 / keysize as f64;
         println!("keysize: {}, distance: {}", keysize, normalizd_distance);
         if let Some((_, distance)) = keysize_distance {
             if normalizd_distance < distance {
