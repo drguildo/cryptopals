@@ -138,10 +138,10 @@ fn find_keysize_average(encrypted: &[u8]) -> u8 {
     let mut keysize_distance: Option<(u8, f64)> = None;
     for keysize in 2..=40 {
         let mut blocks = encrypted.chunks(keysize);
-        let block1 = blocks.nth(0).unwrap();
-        let block2 = blocks.nth(1).unwrap();
-        let block3 = blocks.nth(2).unwrap();
-        let block4 = blocks.nth(3).unwrap();
+        let block1 = blocks.next().unwrap();
+        let block2 = blocks.next().unwrap();
+        let block3 = blocks.next().unwrap();
+        let block4 = blocks.next().unwrap();
 
         let mut normalizd_distances: Vec<f64> = Vec::new();
         normalizd_distances.push(hamming_distance(&block1, &block2) as f64 / keysize as f64);
