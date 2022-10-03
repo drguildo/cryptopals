@@ -2,6 +2,8 @@ use std::collections::HashMap;
 
 use crate::util::hamming_distance;
 
+// TODO: Get rid of this and just have functions return the key. This doesn't really scale for
+// large ciphertexts, or for ones that aren't encoded.
 #[derive(Clone)]
 pub struct Candidate {
     pub rating: f32,
@@ -47,6 +49,7 @@ pub fn english_rating(frequencies: &HashMap<char, f32>, s: &str) -> f32 {
     coefficient
 }
 
+// TODO: Separate out the hex decoding and decrypting
 pub fn detect_single_byte_xor_key(hex: &str) -> Option<Candidate> {
     let bytes = crate::encodings::hex_decode(hex);
     let mut candidates: Vec<Candidate> = Vec::new();
@@ -166,10 +169,17 @@ fn find_keysize_average(encrypted: &[u8]) -> u8 {
     keysize_distance.unwrap().0
 }
 
-pub fn find_repeating_key_xored_string(encrypted: &[u8]) -> Option<Candidate> {
-    let keysize = find_keysize_simple(encrypted);
-    println!("{}", keysize);
-    None
+pub fn find_repeating_key_xored_string(encrypted: &[u8]) -> String {
+    let keysize = find_keysize_average(encrypted);
+    let transposed = crate::util::transpose(encrypted, keysize as usize);
+    let mut key = String::new();
+    for block in transposed {
+        let hex = crate::encodings::hex_encode(&block);
+        if let Some(best_candidate) = detect_single_byte_xor_key(&hex) {
+            key.push(best_candidate.key as char);
+        }
+    }
+    key
 }
 
 #[cfg(test)]
@@ -239,5 +249,13 @@ mod test {
         let xored = crate::set1::repeating_key_xor_vec(plaintext.as_bytes(), "ICE".as_bytes());
         let hex = crate::encodings::hex_encode(&xored);
         assert_eq!("0b3637272a2b2e63622c2e69692a23693a2a3c6324202d623d63343c2a26226324272765272a282b2f20430a652e2c652a3124333a653e2b2027630c692b20283165286326302e27282f", hex);
+    }
+
+    #[test]
+    fn challenge6() {
+        let base64 = std::fs::read_to_string("data/6.txt").unwrap();
+        let bytes = crate::encodings::base64_decode(&base64).unwrap();
+        let key = crate::set1::find_repeating_key_xored_string(&bytes);
+        assert_eq!("Terminator X: Bring the noise", key);
     }
 }
