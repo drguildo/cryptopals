@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 
+use aes::cipher::{generic_array::GenericArray, BlockDecrypt, KeyInit};
+
 use crate::util::hamming_distance;
 
 // TODO: Get rid of this and just have functions return the key. This doesn't really scale for
@@ -182,8 +184,23 @@ pub fn find_repeating_key_xored_string(encrypted: &[u8]) -> String {
     key
 }
 
+pub fn decrypt_aes128(encrypted: &[u8], key: &[u8]) -> Vec<u8> {
+    let key = GenericArray::clone_from_slice(key);
+    let cipher = aes::Aes128::new(&key);
+    let chunks = encrypted.chunks(16);
+    let mut blocks = Vec::new();
+    for chunk in chunks {
+        blocks.push(GenericArray::clone_from_slice(chunk));
+    }
+    cipher.decrypt_blocks(&mut blocks);
+
+    blocks.iter().flatten().copied().collect()
+}
+
 #[cfg(test)]
 mod test {
+    use super::decrypt_aes128;
+
     #[test]
     fn xor_vec_zero() {
         let bytes = [0, 1, 2, 3, 4];
@@ -257,5 +274,14 @@ mod test {
         let bytes = crate::encodings::base64_decode(&base64).unwrap();
         let key = crate::set1::find_repeating_key_xored_string(&bytes);
         assert_eq!("Terminator X: Bring the noise", key);
+    }
+
+    #[test]
+    fn challenge7() {
+        let base64 = std::fs::read_to_string("data/7.txt").unwrap();
+        let bytes = crate::encodings::base64_decode(&base64).unwrap();
+        let decrypted = decrypt_aes128(&bytes, "YELLOW SUBMARINE".as_bytes());
+        let plaintext = std::str::from_utf8(&decrypted).unwrap();
+        assert!(plaintext.starts_with("I'm back and I'm ringin' the bell"));
     }
 }
