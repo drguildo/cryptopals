@@ -121,25 +121,7 @@ pub fn find_xored_string(strings: &Vec<&str>) -> Option<Candidate> {
     candidates.last().cloned()
 }
 
-fn find_keysize_simple(encrypted: &[u8]) -> u8 {
-    let mut keysize_distance: Option<(u8, f64)> = None;
-    for keysize in 2..=40 {
-        let mut blocks = encrypted.chunks(keysize);
-        let block1 = blocks.next().unwrap();
-        let block2 = blocks.next().unwrap();
-
-        let normalizd_distance = hamming_distance(&block1, &block2) as f64 / keysize as f64;
-        if let Some((_, distance)) = keysize_distance {
-            if normalizd_distance < distance {
-                keysize_distance = Some((keysize as u8, normalizd_distance));
-            }
-        } else {
-            keysize_distance = Some((keysize as u8, normalizd_distance));
-        }
-    }
-    keysize_distance.unwrap().0
-}
-
+// TODO: Have this calculate the average distance using every block?
 fn find_keysize_average(encrypted: &[u8]) -> u8 {
     let mut keysize_distance: Option<(u8, f64)> = None;
     for keysize in 2..=40 {
