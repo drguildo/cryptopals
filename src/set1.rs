@@ -197,9 +197,28 @@ pub fn decrypt_aes128(encrypted: &[u8], key: &[u8]) -> Vec<u8> {
     blocks.iter().flatten().copied().collect()
 }
 
+pub fn detect_aes128(strings: &[&str]) -> String {
+    let mut average_distances: Vec<(u32, String)> = Vec::new();
+    for s in strings {
+        let decoded = crate::encodings::hex_decode(s);
+        let chunks: Vec<&[u8]> = decoded.chunks(16).collect();
+
+        let mut total_distances = 0;
+        for i in 0..chunks.len() {
+            for j in i + 1..chunks.len() {
+                let distance = crate::util::hamming_distance(chunks[i], chunks[j]);
+                total_distances += distance;
+            }
+        }
+        average_distances.push((total_distances / (chunks.len() as u32), s.to_string()));
+    }
+    average_distances.sort_by(|a, b| a.0.cmp(&b.0));
+    average_distances.first().unwrap().1.clone()
+}
+
 #[cfg(test)]
 mod test {
-    use super::decrypt_aes128;
+    use super::{decrypt_aes128, detect_aes128};
 
     #[test]
     fn xor_vec_zero() {
@@ -283,5 +302,12 @@ mod test {
         let decrypted = decrypt_aes128(&bytes, "YELLOW SUBMARINE".as_bytes());
         let plaintext = std::str::from_utf8(&decrypted).unwrap();
         assert!(plaintext.starts_with("I'm back and I'm ringin' the bell"));
+    }
+
+    #[test]
+    fn challenge8() {
+        let read_to_string = std::fs::read_to_string("data/8.txt").unwrap();
+        let lines: Vec<&str> = read_to_string.lines().collect();
+        assert_eq!("d880619740a8a19b7840a8a31c810a3d08649af70dc06f4fd5d2d69c744cd283e2dd052f6b641dbf9d11b0348542bb5708649af70dc06f4fd5d2d69c744cd2839475c9dfdbc1d46597949d9c7e82bf5a08649af70dc06f4fd5d2d69c744cd28397a93eab8d6aecd566489154789a6b0308649af70dc06f4fd5d2d69c744cd283d403180c98c8f6db1f2a3f9c4040deb0ab51b29933f2c123c58386b06fba186a", detect_aes128(&lines));
     }
 }
