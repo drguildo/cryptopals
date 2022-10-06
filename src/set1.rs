@@ -122,40 +122,40 @@ pub fn find_xored_string(strings: &Vec<&str>) -> Option<Candidate> {
 }
 
 // TODO: Have this calculate the average distance using every block?
-fn find_keysize_average(encrypted: &[u8]) -> u8 {
-    let mut keysize_distance: Option<(u8, f64)> = None;
-    for keysize in 2..=40 {
-        let mut blocks = encrypted.chunks(keysize);
+fn find_key_size(encrypted: &[u8]) -> u8 {
+    let mut key_size_distance: Option<(u8, f64)> = None;
+    for key_size in 2..=40 {
+        let mut blocks = encrypted.chunks(key_size);
         let block1 = blocks.next().unwrap();
         let block2 = blocks.next().unwrap();
         let block3 = blocks.next().unwrap();
         let block4 = blocks.next().unwrap();
 
         let mut normalizd_distances: Vec<f64> = Vec::new();
-        normalizd_distances.push(hamming_distance(&block1, &block2) as f64 / keysize as f64);
-        normalizd_distances.push(hamming_distance(&block1, &block3) as f64 / keysize as f64);
-        normalizd_distances.push(hamming_distance(&block1, &block4) as f64 / keysize as f64);
-        normalizd_distances.push(hamming_distance(&block2, &block3) as f64 / keysize as f64);
-        normalizd_distances.push(hamming_distance(&block2, &block4) as f64 / keysize as f64);
-        normalizd_distances.push(hamming_distance(&block3, &block4) as f64 / keysize as f64);
+        normalizd_distances.push(hamming_distance(&block1, &block2) as f64 / key_size as f64);
+        normalizd_distances.push(hamming_distance(&block1, &block3) as f64 / key_size as f64);
+        normalizd_distances.push(hamming_distance(&block1, &block4) as f64 / key_size as f64);
+        normalizd_distances.push(hamming_distance(&block2, &block3) as f64 / key_size as f64);
+        normalizd_distances.push(hamming_distance(&block2, &block4) as f64 / key_size as f64);
+        normalizd_distances.push(hamming_distance(&block3, &block4) as f64 / key_size as f64);
 
         let mut average_distance: f64 = normalizd_distances.iter().sum();
         average_distance = average_distance / normalizd_distances.len() as f64;
-        if let Some((_, distance)) = keysize_distance {
+        if let Some((_, distance)) = key_size_distance {
             if average_distance < distance {
-                keysize_distance = Some((keysize as u8, average_distance));
+                key_size_distance = Some((key_size as u8, average_distance));
             }
         } else {
-            keysize_distance = Some((keysize as u8, average_distance));
+            key_size_distance = Some((key_size as u8, average_distance));
         }
     }
 
-    keysize_distance.unwrap().0
+    key_size_distance.unwrap().0
 }
 
 pub fn find_repeating_key_xored_string(encrypted: &[u8]) -> String {
-    let keysize = find_keysize_average(encrypted);
-    let transposed = crate::util::transpose(encrypted, keysize as usize);
+    let key_size = find_key_size(encrypted);
+    let transposed = crate::util::transpose(encrypted, key_size as usize);
     let mut key = String::new();
     for block in transposed {
         let hex = crate::encodings::hex_encode(&block);
