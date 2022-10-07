@@ -14,6 +14,7 @@ pub struct Candidate {
     pub plaintext: String,
 }
 
+// XOR the contents of one slice with the contents of another.
 pub fn xor_buffers(a: &[u8], b: &[u8]) -> Vec<u8> {
     a.iter().zip(b.iter()).map(|p| p.0 ^ p.1).collect()
 }
