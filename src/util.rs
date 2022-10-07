@@ -26,6 +26,16 @@ pub fn transpose(bytes: &[u8], block_size: usize) -> Vec<Vec<u8>> {
     transposed
 }
 
+// XOR the contents of one slice with the contents of another.
+pub fn xor_buffers(a: &[u8], b: &[u8]) -> Vec<u8> {
+    a.iter().zip(b.iter()).map(|p| p.0 ^ p.1).collect()
+}
+
+// XOR each element of the specified slice with the specified key.
+pub fn xor_vec(v: &[u8], key: u8) -> Vec<u8> {
+    v.iter().map(|b| b ^ key).collect::<Vec<u8>>()
+}
+
 #[cfg(test)]
 mod test {
     #[test]
@@ -60,5 +70,17 @@ mod test {
         assert_eq!([1, 5, 9].to_vec(), transposed[1]);
         assert_eq!([2, 6].to_vec(), transposed[2]);
         assert_eq!([3, 7].to_vec(), transposed[3]);
+    }
+
+    #[test]
+    fn xor_vec_zero() {
+        let bytes = [0, 1, 2, 3, 4];
+        assert_eq!(crate::util::xor_vec(&bytes, 0), bytes);
+    }
+
+    #[test]
+    fn xor_vec_ff() {
+        let bytes = [0xFF, 0xFF, 0xFF, 0xFF, 0xFF];
+        assert_eq!(crate::util::xor_vec(&bytes, 0xFF), [0, 0, 0, 0, 0]);
     }
 }

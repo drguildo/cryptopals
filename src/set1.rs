@@ -14,16 +14,6 @@ pub struct Candidate {
     pub plaintext: String,
 }
 
-// XOR the contents of one slice with the contents of another.
-pub fn xor_buffers(a: &[u8], b: &[u8]) -> Vec<u8> {
-    a.iter().zip(b.iter()).map(|p| p.0 ^ p.1).collect()
-}
-
-// XOR each element of the specified slice with the specified key.
-pub fn xor_vec(v: &[u8], key: u8) -> Vec<u8> {
-    v.iter().map(|b| b ^ key).collect::<Vec<u8>>()
-}
-
 // Sequentially XOR each element of the specified slice with the corresponding element of the
 // specified key, cycling back to the beginning once exhausted.
 pub fn repeating_key_xor_vec(v: &[u8], key: &[u8]) -> Vec<u8> {
@@ -93,7 +83,7 @@ pub fn detect_single_byte_xor_key(hex: &str) -> Option<Candidate> {
             continue;
         }
         // TODO: Separate out the xoring function
-        let xored = xor_vec(&bytes, key);
+        let xored = crate::util::xor_vec(&bytes, key);
         if let Ok(s) = std::str::from_utf8(&xored) {
             let rating = english_rating(&frequencies, s);
             candidates.push(Candidate {
@@ -204,18 +194,6 @@ mod test {
     use super::{decrypt_aes128, detect_aes128};
 
     #[test]
-    fn xor_vec_zero() {
-        let bytes = [0, 1, 2, 3, 4];
-        assert_eq!(crate::set1::xor_vec(&bytes, 0), bytes);
-    }
-
-    #[test]
-    fn xor_vec_ff() {
-        let bytes = [0xFF, 0xFF, 0xFF, 0xFF, 0xFF];
-        assert_eq!(crate::set1::xor_vec(&bytes, 0xFF), [0, 0, 0, 0, 0]);
-    }
-
-    #[test]
     fn challenge1() {
         let hex = "49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d";
         let bytes = crate::encodings::hex_decode(&hex);
@@ -230,7 +208,7 @@ mod test {
     fn challenge2() {
         let a = "1c0111001f010100061a024b53535009181c";
         let b = "686974207468652062756c6c277320657965";
-        let xored = crate::set1::xor_buffers(
+        let xored = crate::util::xor_buffers(
             &crate::encodings::hex_decode(a),
             &crate::encodings::hex_decode(b),
         );
