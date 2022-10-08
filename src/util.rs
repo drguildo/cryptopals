@@ -37,7 +37,7 @@ pub fn xor_vec(v: &[u8], key: u8) -> Vec<u8> {
 }
 
 // Pad the specified block to the specified length.
-pub fn pad_block(block: &[u8], length: u8) -> Vec<u8> {
+pub fn pkcs7_pad(block: &[u8], length: u8) -> Vec<u8> {
     if block.len() < (length as usize) {
         let mut padded_block = block.to_vec();
         let num_padding_bytes = length - (block.len() as u8);
