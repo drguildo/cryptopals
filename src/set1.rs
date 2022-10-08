@@ -157,7 +157,7 @@ pub fn find_repeating_key_xored_string(encrypted: &[u8]) -> String {
     key
 }
 
-pub fn decrypt_aes128(encrypted: &[u8], key: &[u8]) -> Vec<u8> {
+pub fn decrypt_aes128_ecb(encrypted: &[u8], key: &[u8]) -> Vec<u8> {
     let key = GenericArray::clone_from_slice(key);
     let cipher = aes::Aes128::new(&key);
     let chunks = encrypted.chunks(16);
@@ -170,7 +170,7 @@ pub fn decrypt_aes128(encrypted: &[u8], key: &[u8]) -> Vec<u8> {
     blocks.iter().flatten().copied().collect()
 }
 
-pub fn detect_aes128(strings: &[&str]) -> String {
+pub fn detect_aes128_ecb(strings: &[&str]) -> String {
     let mut average_distances: Vec<(u32, String)> = Vec::new();
     for s in strings {
         let decoded = crate::encodings::hex_decode(s);
@@ -191,7 +191,7 @@ pub fn detect_aes128(strings: &[&str]) -> String {
 
 #[cfg(test)]
 mod test {
-    use super::{decrypt_aes128, detect_aes128};
+    use super::{decrypt_aes128_ecb, detect_aes128_ecb};
 
     #[test]
     fn challenge1() {
@@ -260,7 +260,7 @@ mod test {
     fn challenge7() {
         let base64 = std::fs::read_to_string("data/7.txt").unwrap();
         let bytes = crate::encodings::base64_decode(&base64).unwrap();
-        let decrypted = decrypt_aes128(&bytes, "YELLOW SUBMARINE".as_bytes());
+        let decrypted = decrypt_aes128_ecb(&bytes, "YELLOW SUBMARINE".as_bytes());
         let plaintext = std::str::from_utf8(&decrypted).unwrap();
         assert!(plaintext.starts_with("I'm back and I'm ringin' the bell"));
     }
@@ -269,6 +269,6 @@ mod test {
     fn challenge8() {
         let read_to_string = std::fs::read_to_string("data/8.txt").unwrap();
         let lines: Vec<&str> = read_to_string.lines().collect();
-        assert_eq!("d880619740a8a19b7840a8a31c810a3d08649af70dc06f4fd5d2d69c744cd283e2dd052f6b641dbf9d11b0348542bb5708649af70dc06f4fd5d2d69c744cd2839475c9dfdbc1d46597949d9c7e82bf5a08649af70dc06f4fd5d2d69c744cd28397a93eab8d6aecd566489154789a6b0308649af70dc06f4fd5d2d69c744cd283d403180c98c8f6db1f2a3f9c4040deb0ab51b29933f2c123c58386b06fba186a", detect_aes128(&lines));
+        assert_eq!("d880619740a8a19b7840a8a31c810a3d08649af70dc06f4fd5d2d69c744cd283e2dd052f6b641dbf9d11b0348542bb5708649af70dc06f4fd5d2d69c744cd2839475c9dfdbc1d46597949d9c7e82bf5a08649af70dc06f4fd5d2d69c744cd28397a93eab8d6aecd566489154789a6b0308649af70dc06f4fd5d2d69c744cd283d403180c98c8f6db1f2a3f9c4040deb0ab51b29933f2c123c58386b06fba186a", detect_aes128_ecb(&lines));
     }
 }
