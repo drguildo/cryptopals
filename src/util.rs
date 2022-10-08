@@ -37,6 +37,7 @@ pub fn xor_vec(v: &[u8], key: u8) -> Vec<u8> {
 }
 
 // Pad the specified block to the specified length.
+// TODO: Add tests.
 pub fn pkcs7_pad(block: &[u8], length: u8) -> Vec<u8> {
     if block.len() < (length as usize) {
         let mut padded_block = block.to_vec();
@@ -48,6 +49,18 @@ pub fn pkcs7_pad(block: &[u8], length: u8) -> Vec<u8> {
     } else {
         block.to_vec()
     }
+}
+
+pub fn pkcs7_unpad(bytes: &[u8]) -> Vec<u8> {
+    if let Some(padding_length) = bytes.iter().last() {
+        return bytes
+            .iter()
+            .take(bytes.len() - (*padding_length as usize))
+            .copied()
+            .collect();
+    }
+
+    bytes.to_vec()
 }
 
 #[cfg(test)]
@@ -96,5 +109,25 @@ mod test {
     fn xor_vec_ff() {
         let bytes = [0xFF, 0xFF, 0xFF, 0xFF, 0xFF];
         assert_eq!(crate::util::xor_vec(&bytes, 0xFF), [0, 0, 0, 0, 0]);
+    }
+
+    #[test]
+    fn unpad_empty() {
+        let unpadded = crate::util::pkcs7_unpad(&[]);
+        let empty: Vec<u8> = Vec::new();
+        assert_eq!(empty, unpadded);
+    }
+
+    #[test]
+    fn unpad_four_bytes() {
+        let unpadded = crate::util::pkcs7_unpad(&[0x1, 0x2, 0x3, 0x4, 0x4, 0x4, 0x4, 0x4]);
+        assert_eq!([0x1, 0x2, 0x3, 0x4].to_vec(), unpadded);
+    }
+
+    #[test]
+    fn unpad_all_padding() {
+        let unpadded = crate::util::pkcs7_unpad(&[0x8, 0x8, 0x8, 0x8, 0x8, 0x8, 0x8, 0x8]);
+        let empty: Vec<u8> = Vec::new();
+        assert_eq!(empty, unpadded);
     }
 }
