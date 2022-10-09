@@ -157,6 +157,7 @@ pub fn find_repeating_key_xored_string(encrypted: &[u8]) -> String {
     key
 }
 
+// TODO: Add an encrypt function?
 pub fn decrypt_aes128_ecb(encrypted: &[u8], key: &[u8]) -> Vec<u8> {
     let key = GenericArray::clone_from_slice(key);
     let cipher = aes::Aes128::new(&key);
