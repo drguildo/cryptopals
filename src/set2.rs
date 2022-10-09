@@ -27,7 +27,7 @@ pub fn encrypt_aes128_cbc(bytes: &[u8], key: &[u8]) -> Vec<u8> {
         let mut block = GenericArray::clone_from_slice(chunks[i]);
         if i > 0 {
             // XOR current plaintext block with previous encrypted block.
-            let previous_block = encrypted_blocks[i - 1].clone();
+            let previous_block = &encrypted_blocks[i - 1];
             let xored = crate::util::xor_buffers(&block, &previous_block);
             block = GenericArray::clone_from_slice(&xored);
         }
