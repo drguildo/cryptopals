@@ -38,6 +38,7 @@ pub fn xor_vec(v: &[u8], key: u8) -> Vec<u8> {
 
 // Pad the specified block to the specified length.
 // TODO: Add tests.
+// TODO: Rewrite this so it takes the entire byte array and returns it padded.
 pub fn pkcs7_pad(block: &[u8], length: u8) -> Vec<u8> {
     if block.len() < (length as usize) {
         let mut padded_block = block.to_vec();
