@@ -1,4 +1,43 @@
-use aes::cipher::{generic_array::GenericArray, BlockDecrypt, KeyInit};
+use aes::cipher::{generic_array::GenericArray, BlockDecrypt, BlockEncrypt, KeyInit};
+
+use crate::util::pkcs7_pad;
+
+pub fn encrypt_aes128_cbc(bytes: &[u8], key: &[u8]) -> Vec<u8> {
+    let key = GenericArray::clone_from_slice(key);
+    let cipher = aes::Aes128::new(&key);
+
+    let mut chunks: Vec<&[u8]> = bytes.chunks(16).collect();
+    let padded: Vec<u8>;
+    if let Some(last_chunk) = chunks.last() {
+        if last_chunk.len() < 16 {
+            // If last block isn't the correct length, pad it.
+            padded = pkcs7_pad(last_chunk, 16);
+            chunks.remove(chunks.len() - 1);
+            chunks.push(&padded);
+        } else if last_chunk.len() == 16 {
+            // Last block doesn't need to be padded, so add an extra padding block.
+            padded = [16; 16].to_vec();
+            chunks.remove(chunks.len() - 1);
+            chunks.push(&padded);
+        }
+    }
+    let mut encrypted_blocks: Vec<Vec<u8>> = Vec::new();
+    let mut i = 0;
+    while i < chunks.len() {
+        let mut block = GenericArray::clone_from_slice(chunks[i]);
+        if i > 0 {
+            // XOR current plaintext block with previous encrypted block.
+            let previous_block = encrypted_blocks[i - 1].clone();
+            let xored = crate::util::xor_buffers(&block, &previous_block);
+            block = GenericArray::clone_from_slice(&xored);
+        }
+        cipher.encrypt_block(&mut block);
+        encrypted_blocks.push(block.to_vec());
+        i += 1;
+    }
+
+    encrypted_blocks.iter().flatten().copied().collect()
+}
 
 pub fn decrypt_aes128_cbc(encrypted: &[u8], key: &[u8]) -> Vec<u8> {
     let key = GenericArray::clone_from_slice(key);
@@ -37,7 +76,7 @@ pub fn decrypt_aes128_cbc(encrypted: &[u8], key: &[u8]) -> Vec<u8> {
 
 #[cfg(test)]
 mod test {
-    use super::decrypt_aes128_cbc;
+    use super::{decrypt_aes128_cbc, encrypt_aes128_cbc};
 
     #[test]
     fn challenge9() {
@@ -46,7 +85,16 @@ mod test {
     }
 
     #[test]
-    fn challenge10() {
+    fn challenge10_encrypt() {
+        let key = "YELLOW SUBMARINE".as_bytes();
+        let plaintext = "I'm back and I'm ringin' the bell".as_bytes();
+        let encrypted = encrypt_aes128_cbc(plaintext, key);
+        let decrypted = decrypt_aes128_cbc(&encrypted, key);
+        assert_eq!(plaintext, decrypted);
+    }
+
+    #[test]
+    fn challenge10_decrypt() {
         let file_contents = std::fs::read_to_string("data/10.txt").unwrap();
         let decoded = crate::encodings::base64_decode(&file_contents).unwrap();
         let decrypted = decrypt_aes128_cbc(&decoded, "YELLOW SUBMARINE".as_bytes());
