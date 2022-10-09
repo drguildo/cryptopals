@@ -1,26 +1,15 @@
 use aes::cipher::{generic_array::GenericArray, BlockDecrypt, BlockEncrypt, KeyInit};
 
-use crate::util::pkcs7_pad;
+use crate::util::{pkcs7_pad, pkcs7_unpad};
 
 pub fn encrypt_aes128_cbc(bytes: &[u8], key: &[u8]) -> Vec<u8> {
+    let mut bytes = bytes.to_vec();
+    pkcs7_pad(&mut bytes, 16);
+
     let key = GenericArray::clone_from_slice(key);
     let cipher = aes::Aes128::new(&key);
 
-    let mut chunks: Vec<&[u8]> = bytes.chunks(16).collect();
-    let padded: Vec<u8>;
-    if let Some(last_chunk) = chunks.last() {
-        if last_chunk.len() < 16 {
-            // If last block isn't the correct length, pad it.
-            padded = pkcs7_pad(last_chunk, 16);
-            chunks.remove(chunks.len() - 1);
-            chunks.push(&padded);
-        } else if last_chunk.len() == 16 {
-            // Last block doesn't need to be padded, so add an extra padding block.
-            padded = [16; 16].to_vec();
-            chunks.remove(chunks.len() - 1);
-            chunks.push(&padded);
-        }
-    }
+    let chunks: Vec<&[u8]> = bytes.chunks(16).collect();
     let mut encrypted_blocks: Vec<Vec<u8>> = Vec::new();
     let mut i = 0;
     while i < chunks.len() {
@@ -53,13 +42,7 @@ pub fn decrypt_aes128_cbc(encrypted: &[u8], key: &[u8]) -> Vec<u8> {
         // XOR the decrypted chunk with the preceding, encrypted block.
         let previous_block = chunks[i - 1];
         let xored_block = crate::util::xor_buffers(&block, previous_block);
-        if i == chunks.len() - 1 {
-            // Remove padding from last block.
-            let unpadded_block = crate::util::pkcs7_unpad(&xored_block);
-            decrypted_blocks.push(unpadded_block);
-        } else {
-            decrypted_blocks.push(xored_block);
-        }
+        decrypted_blocks.push(xored_block);
         i -= 1;
     }
 
@@ -71,7 +54,9 @@ pub fn decrypt_aes128_cbc(encrypted: &[u8], key: &[u8]) -> Vec<u8> {
     }
 
     decrypted_blocks.reverse();
-    decrypted_blocks.iter().flatten().copied().collect()
+    let mut decrypted_bytes = decrypted_blocks.iter().flatten().copied().collect();
+    pkcs7_unpad(&mut decrypted_bytes);
+    decrypted_bytes
 }
 
 #[cfg(test)]
@@ -80,8 +65,9 @@ mod test {
 
     #[test]
     fn challenge9() {
-        let padded = crate::util::pkcs7_pad("YELLOW SUBMARINE".as_bytes(), 20);
-        assert_eq!("YELLOW SUBMARINE\x04\x04\x04\x04".as_bytes(), padded);
+        let mut bytes = "YELLOW SUBMARINE".as_bytes().to_vec();
+        crate::util::pkcs7_pad(&mut bytes, 20);
+        assert_eq!("YELLOW SUBMARINE\x04\x04\x04\x04".as_bytes(), bytes);
     }
 
     #[test]

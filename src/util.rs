@@ -36,32 +36,31 @@ pub fn xor_vec(v: &[u8], key: u8) -> Vec<u8> {
     v.iter().map(|b| b ^ key).collect::<Vec<u8>>()
 }
 
-// Pad the specified block to the specified length.
-// TODO: Add tests.
-// TODO: Rewrite this so it takes the entire byte array and returns it padded.
-pub fn pkcs7_pad(block: &[u8], length: u8) -> Vec<u8> {
-    if block.len() < (length as usize) {
-        let mut padded_block = block.to_vec();
-        let num_padding_bytes = length - (block.len() as u8);
-        for _ in 0..num_padding_bytes {
-            padded_block.push(num_padding_bytes);
-        }
-        padded_block
-    } else {
-        block.to_vec()
+// Pad the specified data using PKCS #7.
+pub fn pkcs7_pad(bytes: &mut Vec<u8>, block_length: u8) {
+    if bytes.len() == 0 {
+        return;
     }
+
+    let padding: Vec<u8>;
+    let modulo = bytes.len() % (block_length as usize);
+    if modulo == 0 {
+        padding = vec![block_length; block_length as usize];
+    } else {
+        let num_padding_bytes = block_length - (modulo as u8);
+        padding = vec![num_padding_bytes as u8; num_padding_bytes as usize];
+    }
+    bytes.extend_from_slice(&padding);
 }
 
-pub fn pkcs7_unpad(bytes: &[u8]) -> Vec<u8> {
+pub fn pkcs7_unpad(bytes: &mut Vec<u8>) {
     if let Some(padding_length) = bytes.iter().last() {
-        return bytes
-            .iter()
-            .take(bytes.len() - (*padding_length as usize))
-            .copied()
-            .collect();
+        let mut num_to_remove = padding_length.clone();
+        while num_to_remove > 0 {
+            bytes.pop().expect("Vec should not be empty");
+            num_to_remove -= 1;
+        }
     }
-
-    bytes.to_vec()
 }
 
 #[cfg(test)]
@@ -113,22 +112,39 @@ mod test {
     }
 
     #[test]
-    fn unpad_empty() {
-        let unpadded = crate::util::pkcs7_unpad(&[]);
+    fn pad_empty() {
+        let mut bytes = Vec::new();
+        crate::util::pkcs7_pad(&mut bytes, 16);
         let empty: Vec<u8> = Vec::new();
-        assert_eq!(empty, unpadded);
+        assert_eq!(empty, bytes);
+    }
+
+    #[test]
+    fn pad() {
+        let mut bytes = vec![1, 2, 3, 4];
+        crate::util::pkcs7_pad(&mut bytes, 8);
+        assert_eq!([1, 2, 3, 4, 4, 4, 4, 4].to_vec(), bytes);
+    }
+
+    #[test]
+    fn pad_one_byte() {
+        let mut bytes = vec![1, 2, 3, 4, 5, 6, 7];
+        crate::util::pkcs7_pad(&mut bytes, 8);
+        assert_eq!([1, 2, 3, 4, 5, 6, 7, 1].to_vec(), bytes);
+    }
+
+    #[test]
+    fn unpad_empty() {
+        let mut bytes = Vec::new();
+        crate::util::pkcs7_unpad(&mut bytes);
+        let empty: Vec<u8> = Vec::new();
+        assert_eq!(empty, bytes);
     }
 
     #[test]
     fn unpad_four_bytes() {
-        let unpadded = crate::util::pkcs7_unpad(&[0x1, 0x2, 0x3, 0x4, 0x4, 0x4, 0x4, 0x4]);
-        assert_eq!([0x1, 0x2, 0x3, 0x4].to_vec(), unpadded);
-    }
-
-    #[test]
-    fn unpad_all_padding() {
-        let unpadded = crate::util::pkcs7_unpad(&[0x8, 0x8, 0x8, 0x8, 0x8, 0x8, 0x8, 0x8]);
-        let empty: Vec<u8> = Vec::new();
-        assert_eq!(empty, unpadded);
+        let mut bytes = vec![0x1, 0x2, 0x3, 0x4, 0x4, 0x4, 0x4, 0x4];
+        crate::util::pkcs7_unpad(&mut bytes);
+        assert_eq!([0x1, 0x2, 0x3, 0x4].to_vec(), bytes);
     }
 }

@@ -1,1 +1,4 @@
-fn main() {}
+fn main() {
+    let mut bytes = vec![0x1, 0x2, 0x3, 0x4, 0x4, 0x4, 0x4, 0x4];
+    cryptopals::util::pkcs7_unpad(&mut bytes);
+}
