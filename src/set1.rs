@@ -1,7 +1,5 @@
 use std::collections::HashMap;
 
-use aes::cipher::{generic_array::GenericArray, BlockDecrypt, KeyInit};
-
 use crate::util::hamming_distance;
 
 // TODO: Get rid of this and just have functions return the key. This doesn't really scale for
@@ -157,43 +155,8 @@ pub fn find_repeating_key_xored_string(encrypted: &[u8]) -> String {
     key
 }
 
-// TODO: Add an encrypt function?
-pub fn decrypt_aes128_ecb(encrypted: &[u8], key: &[u8]) -> Vec<u8> {
-    let key = GenericArray::clone_from_slice(key);
-    let cipher = aes::Aes128::new(&key);
-    let chunks = encrypted.chunks(16);
-    let mut blocks = Vec::new();
-    for chunk in chunks {
-        blocks.push(GenericArray::clone_from_slice(chunk));
-    }
-    cipher.decrypt_blocks(&mut blocks);
-
-    blocks.iter().flatten().copied().collect()
-}
-
-pub fn detect_aes128_ecb(strings: &[&str]) -> String {
-    let mut average_distances: Vec<(u32, String)> = Vec::new();
-    for s in strings {
-        let decoded = crate::encodings::hex_decode(s);
-        let chunks: Vec<&[u8]> = decoded.chunks(16).collect();
-
-        let mut total_distances = 0;
-        for i in 0..chunks.len() {
-            for j in i + 1..chunks.len() {
-                let distance = crate::util::hamming_distance(chunks[i], chunks[j]);
-                total_distances += distance;
-            }
-        }
-        average_distances.push((total_distances / (chunks.len() as u32), s.to_string()));
-    }
-    average_distances.sort_by(|a, b| a.0.cmp(&b.0));
-    average_distances.first().unwrap().1.clone()
-}
-
 #[cfg(test)]
 mod test {
-    use super::{decrypt_aes128_ecb, detect_aes128_ecb};
-
     #[test]
     fn challenge1() {
         let hex = "49276d206b696c6c696e6720796f757220627261696e206c696b65206120706f69736f6e6f7573206d757368726f6f6d";
@@ -261,7 +224,7 @@ mod test {
     fn challenge7() {
         let base64 = std::fs::read_to_string("data/7.txt").unwrap();
         let bytes = crate::encodings::base64_decode(&base64).unwrap();
-        let decrypted = decrypt_aes128_ecb(&bytes, "YELLOW SUBMARINE".as_bytes());
+        let decrypted = crate::aes::decrypt_aes128_ecb(&bytes, "YELLOW SUBMARINE".as_bytes());
         let plaintext = std::str::from_utf8(&decrypted).unwrap();
         assert!(plaintext.starts_with("I'm back and I'm ringin' the bell"));
     }
@@ -270,6 +233,6 @@ mod test {
     fn challenge8() {
         let read_to_string = std::fs::read_to_string("data/8.txt").unwrap();
         let lines: Vec<&str> = read_to_string.lines().collect();
-        assert_eq!("d880619740a8a19b7840a8a31c810a3d08649af70dc06f4fd5d2d69c744cd283e2dd052f6b641dbf9d11b0348542bb5708649af70dc06f4fd5d2d69c744cd2839475c9dfdbc1d46597949d9c7e82bf5a08649af70dc06f4fd5d2d69c744cd28397a93eab8d6aecd566489154789a6b0308649af70dc06f4fd5d2d69c744cd283d403180c98c8f6db1f2a3f9c4040deb0ab51b29933f2c123c58386b06fba186a", detect_aes128_ecb(&lines));
+        assert_eq!("d880619740a8a19b7840a8a31c810a3d08649af70dc06f4fd5d2d69c744cd283e2dd052f6b641dbf9d11b0348542bb5708649af70dc06f4fd5d2d69c744cd2839475c9dfdbc1d46597949d9c7e82bf5a08649af70dc06f4fd5d2d69c744cd28397a93eab8d6aecd566489154789a6b0308649af70dc06f4fd5d2d69c744cd283d403180c98c8f6db1f2a3f9c4040deb0ab51b29933f2c123c58386b06fba186a", crate::aes::detect_aes128_ecb(&lines));
     }
 }
