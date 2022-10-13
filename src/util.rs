@@ -63,6 +63,14 @@ pub fn pkcs7_unpad(bytes: &mut Vec<u8>) {
     }
 }
 
+pub fn random_key() -> [u8; 16] {
+    let mut key = [0; 16];
+    for i in 0..key.len() {
+        key[i] = rand::random();
+    }
+    key
+}
+
 #[cfg(test)]
 mod test {
     #[test]
