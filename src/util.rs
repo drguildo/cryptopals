@@ -1,3 +1,5 @@
+use rand::Rng;
+
 // Find the Hamming distance between the specified strings.
 pub fn hamming_distance(s1: &[u8], s2: &[u8]) -> u32 {
     s1.iter()
@@ -70,6 +72,21 @@ pub fn random_key() -> [u8; 16] {
         key[i] = rand::random();
     }
     key
+}
+
+/// Add a random number of bytes between 5-10 (inclusive)
+pub fn encryption_oracle(bytes: &[u8]) -> Vec<u8> {
+    let key = random_key();
+    let mut new_bytes = Vec::new();
+    for _i in 0..rand::thread_rng().gen_range(5..=10) {
+        new_bytes.push(rand::random());
+    }
+    new_bytes.copy_from_slice(bytes);
+    for _i in 0..rand::thread_rng().gen_range(5..=10) {
+        new_bytes.push(rand::random());
+    }
+    // TODO: Randomly choose between ECB AND CBC encryption
+    new_bytes
 }
 
 #[cfg(test)]
