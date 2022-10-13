@@ -63,6 +63,7 @@ pub fn pkcs7_unpad(bytes: &mut Vec<u8>) {
     }
 }
 
+/// Generate a random AES-128 key.
 pub fn random_key() -> [u8; 16] {
     let mut key = [0; 16];
     for i in 0..key.len() {
