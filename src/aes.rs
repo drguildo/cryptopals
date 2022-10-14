@@ -59,7 +59,24 @@ pub fn decrypt_aes128_cbc(encrypted: &[u8], key: &[u8]) -> Vec<u8> {
     decrypted_bytes
 }
 
-// TODO: Add an encrypt function?
+pub fn encrypt_aes128_ecb(bytes: &[u8], key: &[u8]) -> Vec<u8> {
+    let mut bytes = bytes.to_vec();
+    pkcs7_pad(&mut bytes, 16);
+
+    let key = GenericArray::clone_from_slice(key);
+    let cipher = aes::Aes128::new(&key);
+
+    let chunks: Vec<&[u8]> = bytes.chunks(16).collect();
+    let mut encrypted_blocks: Vec<Vec<u8>> = Vec::new();
+    for chunk in chunks {
+        let mut block = GenericArray::clone_from_slice(chunk);
+        cipher.encrypt_block(&mut block);
+        encrypted_blocks.push(block.to_vec());
+    }
+
+    encrypted_blocks.iter().flatten().copied().collect()
+}
+
 pub fn decrypt_aes128_ecb(encrypted: &[u8], key: &[u8]) -> Vec<u8> {
     let key = GenericArray::clone_from_slice(key);
     let cipher = aes::Aes128::new(&key);
@@ -70,7 +87,9 @@ pub fn decrypt_aes128_ecb(encrypted: &[u8], key: &[u8]) -> Vec<u8> {
     }
     cipher.decrypt_blocks(&mut blocks);
 
-    blocks.iter().flatten().copied().collect()
+    let mut decrypted_bytes = blocks.iter().flatten().copied().collect();
+    pkcs7_unpad(&mut decrypted_bytes);
+    decrypted_bytes
 }
 
 pub fn detect_aes128_ecb(strings: &[&str]) -> String {
@@ -90,4 +109,16 @@ pub fn detect_aes128_ecb(strings: &[&str]) -> String {
     }
     average_distances.sort_by(|a, b| a.0.cmp(&b.0));
     average_distances.first().unwrap().1.clone()
+}
+
+#[cfg(test)]
+mod test {
+    #[test]
+    fn aes128_ebc_encrypt_decrypt() {
+        let plaintext_bytes = "I hope you are having lots of fun in trying to catch me.".as_bytes();
+        let key_bytes = &"YELLOW SUBMARINE".as_bytes();
+        let encrypted = crate::aes::encrypt_aes128_ecb(plaintext_bytes, key_bytes);
+        let decrypted = crate::aes::decrypt_aes128_ecb(&encrypted, &key_bytes);
+        assert_eq!(plaintext_bytes, decrypted);
+    }
 }
