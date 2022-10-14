@@ -77,16 +77,16 @@ pub fn random_key() -> [u8; 16] {
 /// Add a random number of bytes between 5-10 (inclusive)
 pub fn encryption_oracle(bytes: &[u8]) -> Vec<u8> {
     let key = random_key();
-    let mut new_bytes = Vec::new();
+    let mut padded_bytes = Vec::new();
     for _i in 0..rand::thread_rng().gen_range(5..=10) {
-        new_bytes.push(rand::random());
+        padded_bytes.push(rand::random());
     }
-    new_bytes.copy_from_slice(bytes);
+    padded_bytes.copy_from_slice(bytes);
     for _i in 0..rand::thread_rng().gen_range(5..=10) {
-        new_bytes.push(rand::random());
+        padded_bytes.push(rand::random());
     }
     // TODO: Randomly choose between ECB AND CBC encryption
-    new_bytes
+    padded_bytes
 }
 
 #[cfg(test)]
