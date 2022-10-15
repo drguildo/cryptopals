@@ -1,6 +1,6 @@
 use rand::Rng;
 
-// Find the Hamming distance between the specified strings.
+// Find the Hamming distance between the specified slices.
 pub fn hamming_distance(s1: &[u8], s2: &[u8]) -> u32 {
     s1.iter()
         .zip(s2.iter())
