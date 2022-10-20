@@ -81,12 +81,16 @@ pub fn encryption_oracle(bytes: &[u8]) -> Vec<u8> {
     for _i in 0..rand::thread_rng().gen_range(5..=10) {
         padded_bytes.push(rand::random());
     }
-    padded_bytes.copy_from_slice(bytes);
+    padded_bytes.extend_from_slice(bytes);
     for _i in 0..rand::thread_rng().gen_range(5..=10) {
         padded_bytes.push(rand::random());
     }
-    // TODO: Randomly choose between ECB AND CBC encryption
-    padded_bytes
+    let encrypted = if rand::random() {
+        crate::aes::encrypt_aes128_cbc(&padded_bytes, &key)
+    } else {
+        crate::aes::encrypt_aes128_ecb(&padded_bytes, &key)
+    };
+    encrypted
 }
 
 #[cfg(test)]
