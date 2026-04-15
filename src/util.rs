@@ -78,11 +78,11 @@ pub fn random_key() -> [u8; 16] {
 pub fn encryption_oracle(bytes: &[u8]) -> Vec<u8> {
     let key = random_key();
     let mut padded_bytes = Vec::new();
-    for _i in 0..rand::thread_rng().gen_range(5..=10) {
+    for _i in 0..rand::rng().random_range(5..=10) {
         padded_bytes.push(rand::random());
     }
     padded_bytes.extend_from_slice(bytes);
-    for _i in 0..rand::thread_rng().gen_range(5..=10) {
+    for _i in 0..rand::rng().random_range(5..=10) {
         padded_bytes.push(rand::random());
     }
     let encrypted = if rand::random() {
